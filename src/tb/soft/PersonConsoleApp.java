@@ -40,7 +40,7 @@ public class PersonConsoleApp {
 	 * prostych metod do realizacji dialogu z użytkownikiem
 	 * w oknie konsoli tekstowej.
 	 */
-	private static final ConsoleUserDialog UI = new ConsoleUserDialog();
+	private static final ConsoleUserDialog UI = new JOptionUserDialog();
 	
 	
 	public static void main(String[] args) {
