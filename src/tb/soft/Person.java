@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Objects;
 
 
 /*
@@ -178,8 +179,28 @@ public class Person {
 		writer.println(person.firstName + "#" + person.lastName + 
 				"#" + person.birthYear + "#" + person.job);
 	}
-	
-	
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Person person = (Person) o;
+
+		if (birthYear != person.birthYear) return false;
+		if (!Objects.equals(firstName, person.firstName)) return false;
+		return lastName.equals(person.lastName);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = firstName != null ? firstName.hashCode() : 0;
+		result = 31 * result + lastName.hashCode();
+		result = 31 * result + birthYear;
+		return result;
+	}
+
 	public static void printToFile(String file_name, Person person) throws PersonException {
 		try (PrintWriter writer = new PrintWriter(file_name)) {
 			printToFile(writer, person);
@@ -195,7 +216,7 @@ public class Person {
 			String[] txt = line.split("#");
 			Person person = new Person(txt[0], txt[1]);
 			person.setBirthYear(txt[2]);
-			person.setJob(txt[3]);	
+			person.setJob(txt[3]);
 			return person;
 		} catch(IOException e){
 			throw new PersonException("Wystąpił błąd podczas odczytu danych z pliku.");
@@ -203,14 +224,30 @@ public class Person {
 	}
 	
 	
-	public static Person readFromFile(String file_name) throws PersonException {
+	public static Person readFromFile(String file_name, int last) throws PersonException {
 		try (BufferedReader reader = new BufferedReader(new FileReader(new File(file_name)))) {
-			return Person.readFromFile(reader);
+			return Person.readFromFileAll(reader, last);
 		} catch (FileNotFoundException e){
 			throw new PersonException("Nie odnaleziono pliku " + file_name);
 		} catch(IOException e){
 			throw new PersonException("Wystąpił błąd podczas odczytu danych z pliku.");
 		}	
 	}
-	
+
+	public static Person readFromFileAll(BufferedReader reader, int last) throws PersonException{
+		try {
+			String line = null;
+			for(int i = 0; i <= last; i++) {
+				line = reader.readLine();
+			}
+			String[] txt = line.split("#");
+			Person person = new Person(txt[0], txt[1]);
+			person.setBirthYear(txt[2]);
+			person.setJob(txt[3]);
+			return person;
+		} catch(IOException e){
+			throw new PersonException("Wystąpił błąd podczas odczytu danych z pliku.");
+		}
+	}
+
 }  // koniec klasy Person

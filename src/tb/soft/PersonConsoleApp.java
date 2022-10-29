@@ -1,8 +1,8 @@
 package tb.soft;
 
-import java.util.Arrays;
+import java.util.*;
 
-/**
+/*
  * Program: Aplikacja działająca w oknie konsoli, która umożliwia testowanie 
  *          operacji wykonywanych na obiektach klasy Person.
  *    Plik: PersonConsoleApp.java
@@ -17,6 +17,15 @@ public class PersonConsoleApp {
 	        "Autor: Paweł Rogaliński\n" +
 			"Data:  październik 2018 r.\n";
 
+	private static final String COLLECTION_MENU =
+			" Wybierz typ kolekcji:		\n" +
+			"1 - HashSet				\n" +
+			"2 - TreeSet				\n" +
+			"3 - LinkedList				\n" +
+			"4 - ArrayList				\n" +
+			"5 - HashMap				\n" +
+			"6 - TreeMap				\n" +
+			"0 - Zakończ program		\n";
 	private static final String MENU = 
 			"    M E N U   G Ł Ó W N E  \n" +
 			"1 - Podaj dane nowej osoby \n" +
@@ -40,9 +49,10 @@ public class PersonConsoleApp {
 	 * prostych metod do realizacji dialogu z użytkownikiem
 	 * w oknie konsoli tekstowej.
 	 */
-	private static final ConsoleUserDialog UI = new JOptionUserDialog();
-	
-	
+	// private static final ConsoleUserDialog UI = new JOptionUserDialog();
+	private static final ConsoleUserDialog UI = new ConsoleUserDialog();
+
+
 	public static void main(String[] args) {
 		// Utworzenie obiektu aplikacji konsolowej
 		// oraz uruchomienie głównej pętli aplikacji.
@@ -55,8 +65,10 @@ public class PersonConsoleApp {
 	 *  Referencja do obiektu, który zawiera dane aktualnej osoby.
 	 */
 	private Person currentPerson = null;
-	
-	
+	private boolean choice = false;
+	private AbstractCollection<Person> setList = null;
+	private AbstractMap<Integer, Person> map = null;
+
 	/*
 	 *  Metoda runMainLoop wykonuje główną pętlę aplikacji.
 	 *  UWAGA: Ta metoda zawiera nieskończoną pętlę,
@@ -66,30 +78,94 @@ public class PersonConsoleApp {
 	public void runMainLoop() {
 		UI.printMessage(GREETING_MESSAGE);
 
+		while(!choice)
+		{
+			switch(UI.enterInt(COLLECTION_MENU + "==>> ")) {
+				case 1:	//ini hashSet
+				{
+					setList = new HashSet<Person>();
+					choice = true;
+				}
+				break;
+				case 2: //ini treeSet
+				{
+					setList = new TreeSet<Person>();
+					choice = true;
+				}
+				break;
+				case 3: //ini linkedList
+				{
+					choice = true;
+					setList = new LinkedList<Person>();
+				}
+				break;
+				case 4: //ini arrayList
+				{
+					choice = true;
+					setList = new ArrayList<Person>();
+				}
+				break;
+				case 5:
+					break;
+				case 6:
+					break;
+				case 0:{
+					// zakończenie działania programu
+					UI.printInfoMessage("\nProgram zakończył działanie!");
+					choice = true;
+					System.exit(0);
+				}
+				default:
+				{
+					choice = false;
+					UI.printErrorMessage("Wybierz sposób zapisu danych!");
+				}
+			}
+		}
+
 		while (true) {
 			UI.clearConsole();
-			showCurrentPerson();
+			Iterator <Person> iter = setList.iterator();
+			// showCurrentPerson();
+			while(iter.hasNext())
+			{
+				showPerson(iter.next());
+			}
+			System.out.print(setList);
 
 			try {
 				switch (UI.enterInt(MENU + "==>> ")) {
 				case 1:
 					// utworzenie nowej osoby
-					currentPerson = createNewPerson();
+					setList.add(createNewPerson());
+					// currentPerson = createNewPerson();
 					break;
 				case 2:
 					// usunięcie danych aktualnej osoby.
-					currentPerson = null;
+					Integer toRemoveInt = UI.enterInt("Obiekt do usunięcia ==>> ");
+					iter = setList.iterator();
+					while(toRemoveInt >= 0 && iter.hasNext())
+					{
+						Person toRemove = iter.next();
+						// https://stackoverflow.com/questions/43690009/how-to-remove-an-object-from-a-linked-list-in-java
+						if(toRemoveInt == 0)	iter.remove();
+
+						toRemoveInt--;
+					}
 					UI.printInfoMessage("Dane aktualnej osoby zostały usunięte");
 					break;
 				case 3:
 					// zmiana danych dla aktualnej osoby
-					if (currentPerson == null) throw new PersonException("Żadna osoba nie została utworzona.");
+					if (setList.isEmpty() == false) throw new PersonException("Żadna osoba nie została utworzona.");
 					changePersonData(currentPerson);
 					break;
 				case 4: {
 					// odczyt danych z pliku tekstowego.
 					String file_name = UI.enterString("Podaj nazwę pliku: ");
-					currentPerson = Person.readFromFile(file_name);
+					int am = 1;
+					for(int i = 0; i <= am; i++){
+						setList.add(Person.readFromFile(file_name, i));
+					}
 					UI.printInfoMessage("Dane aktualnej osoby zostały wczytane z pliku " + file_name);
 				}
 					break;
@@ -159,6 +235,7 @@ public class PersonConsoleApp {
 		UI.printMessage("Dozwolone stanowiska:" + Arrays.deepToString(PersonJob.values()));
 		String job_name = UI.enterString("Podaj stanowisko: ");
 		Person person;
+		Set<Person> zbiorOsob = new HashSet<>();
 		try { 
 			// Utworzenie nowego obiektu klasy Person oraz
 			// ustawienie wartości wszystkich atrybutów.
