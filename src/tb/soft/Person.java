@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.AbstractCollection;
+import java.util.Iterator;
 import java.util.Objects;
 
 
@@ -180,6 +182,16 @@ public class Person {
 				"#" + person.birthYear + "#" + person.job);
 	}
 
+	public static void printTableToFile(PrintWriter writer, AbstractCollection<Person> person){
+		Iterator<Person> personIterator = person.iterator();
+		while(personIterator.hasNext())
+		{
+			Person temporaryPerson = personIterator.next();
+			writer.println(temporaryPerson.firstName + "#" + temporaryPerson.lastName +
+					"#" + temporaryPerson.birthYear + "#" + temporaryPerson.job);
+		}
+	}
+
 
 	@Override
 	public boolean equals(Object o) {
@@ -208,6 +220,14 @@ public class Person {
 			throw new PersonException("Nie odnaleziono pliku " + file_name);
 		}
 	}
+
+	public static void printTableToFile(String file_name, AbstractCollection<Person> person) throws PersonException {
+		try (PrintWriter writer = new PrintWriter(file_name)) {
+			printTableToFile(writer, person);
+		} catch (FileNotFoundException e){
+			throw new PersonException("Nie odnaleziono pliku " + file_name);
+		}
+	}
 	
 	
 	public static Person readFromFile(BufferedReader reader) throws PersonException{
@@ -224,9 +244,9 @@ public class Person {
 	}
 	
 	
-	public static Person readFromFile(String file_name, int last) throws PersonException {
+	public static Person readFromFile(String file_name, int amount) throws PersonException {
 		try (BufferedReader reader = new BufferedReader(new FileReader(new File(file_name)))) {
-			return Person.readFromFileAll(reader, last);
+			return Person.readFromFileAll(reader, amount);
 		} catch (FileNotFoundException e){
 			throw new PersonException("Nie odnaleziono pliku " + file_name);
 		} catch(IOException e){

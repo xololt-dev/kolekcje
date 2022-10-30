@@ -172,7 +172,7 @@ public class PersonConsoleApp {
 				case 5: {
 					// zapis danych aktualnej osoby do pliku tekstowego 
 					String file_name = UI.enterString("Podaj nazwę pliku: ");
-					Person.printToFile(file_name, currentPerson);
+					Person.printTableToFile(file_name, setList);
 					UI.printInfoMessage("Dane aktualnej osoby zostały zapisane do pliku " + file_name);
 				}
 
