@@ -84,10 +84,10 @@ class PersonException extends Exception {
  */
 public class Person {
 	
-	private String firstName;
-	private String lastName;
-	private int birthYear;
-	private PersonJob job;
+	protected String firstName;
+	protected String lastName;
+	protected int birthYear;
+	protected PersonJob job;
  
 	
 	public Person(String first_name, String last_name) throws PersonException {
@@ -192,27 +192,6 @@ public class Person {
 		}
 	}
 
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		Person person = (Person) o;
-
-		if (birthYear != person.birthYear) return false;
-		if (!Objects.equals(firstName, person.firstName)) return false;
-		return lastName.equals(person.lastName);
-	}
-
-	@Override
-	public int hashCode() {
-		int result = firstName != null ? firstName.hashCode() : 0;
-		result = 31 * result + lastName.hashCode();
-		result = 31 * result + birthYear;
-		return result;
-	}
-
 	public static void printToFile(String file_name, Person person) throws PersonException {
 		try (PrintWriter writer = new PrintWriter(file_name)) {
 			printToFile(writer, person);
@@ -244,9 +223,9 @@ public class Person {
 	}
 	
 	
-	public static Person readFromFile(String file_name, int amount) throws PersonException {
+	public static Person readFromFile(String file_name) throws PersonException {
 		try (BufferedReader reader = new BufferedReader(new FileReader(new File(file_name)))) {
-			return Person.readFromFileAll(reader, amount);
+			return Person.readFromFile(reader);
 		} catch (FileNotFoundException e){
 			throw new PersonException("Nie odnaleziono pliku " + file_name);
 		} catch(IOException e){
@@ -254,7 +233,7 @@ public class Person {
 		}	
 	}
 
-	public static Person readFromFileAll(BufferedReader reader, int last) throws PersonException{
+	/*public static Person readFromFileAll(BufferedReader reader, int last) throws PersonException{
 		try {
 			String line = null;
 			for(int i = 0; i <= last; i++) {
@@ -268,6 +247,6 @@ public class Person {
 		} catch(IOException e){
 			throw new PersonException("Wystąpił błąd podczas odczytu danych z pliku.");
 		}
-	}
+	}*/
 
 }  // koniec klasy Person
