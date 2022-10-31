@@ -1,5 +1,6 @@
 package tb.soft;
 
+import java.io.*;
 import java.util.*;
 
 /*
@@ -33,6 +34,8 @@ public class PersonConsoleApp {
 			"3 - Modyfikuj dane osoby   \n" +
 			"4 - Wczytaj dane z pliku   \n" +
 			"5 - Zapisz dane do pliku   \n" +
+			"6 - equals() porównanie	\n" +
+			"7 - hashCode() porównanie	\n" +
 			"0 - Zakończ program        \n";	
 	
 	private static final String CHANGE_MENU = 
@@ -67,6 +70,7 @@ public class PersonConsoleApp {
 	private Person currentPerson = null;
 	private boolean choice = false;
 	private AbstractCollection<Person> setList = null;
+	private AbstractCollection<Person_defined> setListD = null;
 	private AbstractMap<Integer, Person> map = null;
 
 	/*
@@ -84,12 +88,14 @@ public class PersonConsoleApp {
 				case 1:	//ini hashSet
 				{
 					setList = new HashSet<Person>();
+					setListD = new HashSet<Person_defined>();
 					choice = true;
 				}
 				break;
 				case 2: //ini treeSet
 				{
 					setList = new TreeSet<Person>();
+					setListD = new TreeSet<Person_defined>();
 					choice = true;
 				}
 				break;
@@ -97,12 +103,14 @@ public class PersonConsoleApp {
 				{
 					choice = true;
 					setList = new LinkedList<Person>();
+					setListD = new LinkedList<Person_defined>();
 				}
 				break;
 				case 4: //ini arrayList
 				{
 					choice = true;
 					setList = new ArrayList<Person>();
+					setListD = new ArrayList<Person_defined>();
 				}
 				break;
 				case 5:
@@ -126,46 +134,85 @@ public class PersonConsoleApp {
 		while (true) {
 			UI.clearConsole();
 			Iterator <Person> iter = setList.iterator();
+			Iterator <Person_defined> iterD = setListD.iterator();
 			// showCurrentPerson();
 			while(iter.hasNext())
 			{
 				showPerson(iter.next());
 			}
-			System.out.print(setList);
+			UI.printMessage("---------------");
+			while(iterD.hasNext())
+			{
+				showPerson(iterD.next());
+			}
 
 			try {
 				switch (UI.enterInt(MENU + "==>> ")) {
 				case 1:
 					// utworzenie nowej osoby
-					setList.add(createNewPerson());
-					// currentPerson = createNewPerson();
+					Person personTemp = createNewPerson();
+					Person_defined personDTemp = new Person_defined(personTemp);
+					setList.add(personTemp);
+					setListD.add(personDTemp);
 					break;
 				case 2:
 					// usunięcie danych aktualnej osoby.
 					Integer toRemoveInt = UI.enterInt("Obiekt do usunięcia ==>> ");
 					iter = setList.iterator();
+					iterD = setListD.iterator();
 					while(toRemoveInt >= 0 && iter.hasNext())
 					{
 						Person toRemove = iter.next();
+						Person_defined toRemoveD = iterD.next();
 						// https://stackoverflow.com/questions/43690009/how-to-remove-an-object-from-a-linked-list-in-java
-						if(toRemoveInt == 0)	iter.remove();
-
+						if(toRemoveInt == 0)
+						{
+							iter.remove();
+							iterD.remove();
+						}
 						toRemoveInt--;
 					}
 					UI.printInfoMessage("Dane aktualnej osoby zostały usunięte");
 					break;
 				case 3:
 					// zmiana danych dla aktualnej osoby
-					if (setList.isEmpty() == false) throw new PersonException("Żadna osoba nie została utworzona.");
-					changePersonData(currentPerson);
+					if (setList.isEmpty() == true || setListD.isEmpty() == true) throw new PersonException("Żadna osoba nie została utworzona.");
+					iter = setList.iterator();
+					iterD = setListD.iterator();
+					Person toEdit = null;
+					Person_defined toEditD = null;
+					while(iter.hasNext())
+					{
+						toEdit = iter.next();
+						if(UI.enterInt("Obiekt do edycji z kolekcji bazowej?: " + toEdit + "\n" +
+								"0 - nie\n" +
+								"1 - tak\n ==>> ") == 1)
+						{
+							setList.remove(toEdit);
+							break;
+						}
+					}
+					while(iterD.hasNext())
+					{
+						toEditD = iterD.next();
+						if(UI.enterInt("Obiekt do edycji z kolekcji zdefiniowanej?: " + toEditD + "\n" +
+								"0 - nie\n" +
+								"1 - tak\n ==>> ") == 1)
+						{
+							setListD.remove(toEditD);
+							break;
+						}
+					}
+
+					changePersonData(toEdit);
+					setList.add(toEdit);
+					changePersonData(toEditD);
+					setListD.add(toEditD);
 					break;
 				case 4: {
 					// odczyt danych z pliku tekstowego.
 					String file_name = UI.enterString("Podaj nazwę pliku: ");
-					int am = 1;
-					for(int i = 0; i <= am; i++){
-						setList.add(Person.readFromFile(file_name, i));
-					}
+					loadAllFromFile(file_name, setList, setListD);
 					UI.printInfoMessage("Dane aktualnej osoby zostały wczytane z pliku " + file_name);
 				}
 					break;
@@ -173,9 +220,17 @@ public class PersonConsoleApp {
 					// zapis danych aktualnej osoby do pliku tekstowego 
 					String file_name = UI.enterString("Podaj nazwę pliku: ");
 					Person.printTableToFile(file_name, setList);
+					Person_defined.printTableToFileDefined(file_name, setListD);
 					UI.printInfoMessage("Dane aktualnej osoby zostały zapisane do pliku " + file_name);
 				}
-
+					break;
+				case 6:
+					// porównanie obiektów z pomocą zdefiniowanej funkcji equals() oraz przy jej braku
+					equalsCompare(setList, setListD);
+					break;
+				case 7:
+					// porównanie obiektów z pomocą zdefiniowanej funkcji hashCode() oraz przy jej braku
+					hashCodeCompare(setList, setListD);
 					break;
 				case 0:
 					// zakończenie działania programu
@@ -201,7 +256,148 @@ public class PersonConsoleApp {
 		showPerson(currentPerson);
 	} 
 
-	
+	static void loadAllFromFile(String file_name, AbstractCollection<Person> list, AbstractCollection<Person_defined> listD) throws PersonException {
+		try
+		{
+			BufferedReader reader = new BufferedReader(new FileReader(new File(file_name)));
+
+			String line = null;
+			line = reader.readLine();
+			while(line != null)
+			{
+				String[] txt = line.split("#");
+				Person person = new Person(txt[0], txt[1]);
+				Person_defined personD = new Person_defined(txt[0], txt[1]);
+				person.setBirthYear(txt[2]);
+				personD.setBirthYear(txt[2]);
+				person.setJob(txt[3]);
+				personD.setJob(txt[3]);
+				list.add(person);
+				listD.add(personD);
+				line = reader.readLine();
+			}
+		}
+		catch (FileNotFoundException e)
+		{
+			throw new PersonException("Nie odnaleziono pliku " + file_name);
+		}
+		catch(IOException e){
+			throw new PersonException("Wystąpił błąd podczas odczytu danych z pliku.");
+		}
+	}
+
+	/*
+	* Porównanie obiektów przy użyciu equals()
+	*/
+	static void equalsCompare(AbstractCollection<Person> list, AbstractCollection<Person_defined> listD)
+	{
+		if(list.size() > 1)
+		{
+			Iterator <Person> iter = list.iterator();
+			Person person = iter.next();
+			Person personCompare = null;
+			while(iter.hasNext())
+			{
+				personCompare = iter.next();
+				if(person.equals(personCompare))
+				{
+					UI.printMessage("----------------------");
+					UI.printMessage(person + " jest tym samym obiektem co " + personCompare + " według equals() w kolekcji podstawowej.");
+				}
+				else
+				{
+					UI.printMessage("----------------------");
+					UI.printMessage(person + " NIE jest tym samym obiektem co " + personCompare + " według equals() w kolekcji podstawowej.");
+				}
+			}
+		}
+		else
+		{
+			UI.printErrorMessage("Za mała ilość obiektów w kolekcji podstawowej aby porównać!");
+		}
+
+		if(listD.size() > 1)
+		{
+			Iterator <Person_defined> iterD = listD.iterator();
+			Person_defined personD = iterD.next();
+			Person_defined personCompareD = null;
+			while(iterD.hasNext())
+			{
+				personCompareD = iterD.next();
+				if(personD.equals(personCompareD))
+				{
+					UI.printMessage("----------------------");
+					UI.printMessage(personD + " jest tym samym obiektem co " + personCompareD + " według equals() w kolekcji zdefiniowanej.");
+				}
+				else
+				{
+					UI.printMessage("----------------------");
+					UI.printMessage(personD + " NIE jest tym samym obiektem co " + personCompareD + " według equals() w kolekcji zdefiniowanej.");
+				}
+			}
+		}
+		else
+		{
+			UI.printErrorMessage("Za mała ilość obiektów w kolekcji zdefiniowanej aby porównać!");
+		}
+	}
+
+	/*
+	 * Porównanie obiektów przy użyciu hashCode()
+	 */
+	static void hashCodeCompare(AbstractCollection<Person> list, AbstractCollection<Person_defined> listD)
+	{
+		if(list.size() > 1)
+		{
+			Iterator <Person> iter = list.iterator();
+			Person person = iter.next();
+			Person personCompare = null;
+			while(iter.hasNext())
+			{
+				personCompare = iter.next();
+				if(person.hashCode() == personCompare.hashCode())
+				{
+					UI.printMessage("----------------------");
+					UI.printMessage(person + " jest tym samym obiektem co " + personCompare + " według hashCode() w kolekcji podstawowej.");
+				}
+				else
+				{
+					UI.printMessage("----------------------");
+					UI.printMessage(person + " NIE jest tym samym obiektem co " + personCompare + " według hashCode() w kolekcji podstawowej.");
+				}
+			}
+		}
+		else
+		{
+			UI.printErrorMessage("Za mała ilość obiektów w kolekcji podstawowej aby porównać!");
+		}
+
+		if(listD.size() > 1)
+		{
+			Iterator <Person_defined> iterD = listD.iterator();
+			Person_defined personD = iterD.next();
+			Person_defined personCompareD = null;
+			while(iterD.hasNext())
+			{
+				personCompareD = iterD.next();
+				if(personD.hashCode() == personCompareD.hashCode())
+				{
+					UI.printMessage("----------------------");
+					UI.printMessage(personD + " jest tym samym obiektem co " + personCompareD + " według hashCode() w kolekcji zdefiniowanej.");
+				}
+				else
+				{
+					UI.printMessage("----------------------");
+					UI.printMessage(personD + " NIE jest tym samym obiektem co " + personCompareD + " według hashCode() w kolekcji zdefiniowanej.");
+				}
+			}
+		}
+		else
+		{
+			UI.printErrorMessage("Za mała ilość obiektów w kolekcji zdefiniowanej aby porównać!");
+		}
+	}
+
 	/* 
 	 * Metoda wyświetla w oknie konsoli dane osoby reprezentowanej 
 	 * przez obiekt klasy Person
@@ -235,7 +431,6 @@ public class PersonConsoleApp {
 		UI.printMessage("Dozwolone stanowiska:" + Arrays.deepToString(PersonJob.values()));
 		String job_name = UI.enterString("Podaj stanowisko: ");
 		Person person;
-		Set<Person> zbiorOsob = new HashSet<>();
 		try { 
 			// Utworzenie nowego obiektu klasy Person oraz
 			// ustawienie wartości wszystkich atrybutów.
