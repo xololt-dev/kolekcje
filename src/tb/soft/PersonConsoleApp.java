@@ -36,7 +36,8 @@ public class PersonConsoleApp {
 			"5 - Zapisz dane do pliku   \n" +
 			"6 - equals() porównanie	\n" +
 			"7 - hashCode() porównanie	\n" +
-			"0 - Zakończ program        \n";	
+			"8 - Sortowanie				\n" +
+			"0 - Zakończ program        \n";
 	
 	private static final String CHANGE_MENU = 
 			"   Co zmienić?     \n" + 
@@ -45,6 +46,12 @@ public class PersonConsoleApp {
 	        "3 - Rok urodzenia  \n" + 
 			"4 - Stanowisko     \n" +
 	        "0 - Powrót do menu głównego\n";
+
+	private static final String SORT_MENU =
+			"   Jak posortować?     \n" +
+			"1 - Comparable         \n" +
+			"2 - Comparator	        \n" +
+			"0 - Powrót do menu głównego\n";
 
 	
 	/**
@@ -69,6 +76,7 @@ public class PersonConsoleApp {
 	 */
 	private Person currentPerson = null;
 	private boolean choice = false;
+	private static int tabletype = 0;
 	private AbstractCollection<Person> setList = null;
 	private AbstractCollection<Person_defined> setListD = null;
 	private AbstractMap<Integer, Person> map = null;
@@ -90,6 +98,7 @@ public class PersonConsoleApp {
 					setList = new HashSet<Person>();
 					setListD = new HashSet<Person_defined>();
 					choice = true;
+					tabletype = 1;
 				}
 				break;
 				case 2: //ini treeSet
@@ -97,6 +106,7 @@ public class PersonConsoleApp {
 					setList = new TreeSet<Person>();
 					setListD = new TreeSet<Person_defined>();
 					choice = true;
+					tabletype = 2;
 				}
 				break;
 				case 3: //ini linkedList
@@ -104,6 +114,7 @@ public class PersonConsoleApp {
 					choice = true;
 					setList = new LinkedList<Person>();
 					setListD = new LinkedList<Person_defined>();
+					tabletype = 3;
 				}
 				break;
 				case 4: //ini arrayList
@@ -111,6 +122,7 @@ public class PersonConsoleApp {
 					choice = true;
 					setList = new ArrayList<Person>();
 					setListD = new ArrayList<Person_defined>();
+					tabletype = 4;
 				}
 				break;
 				case 5:
@@ -151,6 +163,10 @@ public class PersonConsoleApp {
 				case 1:
 					// utworzenie nowej osoby
 					Person personTemp = createNewPerson();
+					while(personTemp == null)
+					{
+						personTemp = createNewPerson();
+					}
 					Person_defined personDTemp = new Person_defined(personTemp);
 					setList.add(personTemp);
 					setListD.add(personDTemp);
@@ -232,6 +248,10 @@ public class PersonConsoleApp {
 					// porównanie obiektów z pomocą zdefiniowanej funkcji hashCode() oraz przy jej braku
 					hashCodeCompare(setList, setListD);
 					break;
+				case 8:
+					// sortowanie kolekcji
+					personSort(setListD);
+					break;
 				case 0:
 					// zakończenie działania programu
 					UI.printInfoMessage("\nProgram zakończył działanie!");
@@ -293,6 +313,7 @@ public class PersonConsoleApp {
 	{
 		if(list.size() > 1)
 		{
+			UI.printMessage("equals() standardowe: ");
 			Iterator <Person> iter = list.iterator();
 			Person person = iter.next();
 			Person personCompare = null;
@@ -318,6 +339,7 @@ public class PersonConsoleApp {
 
 		if(listD.size() > 1)
 		{
+			UI.printMessage("equals() override: ");
 			Iterator <Person_defined> iterD = listD.iterator();
 			Person_defined personD = iterD.next();
 			Person_defined personCompareD = null;
@@ -395,6 +417,73 @@ public class PersonConsoleApp {
 		else
 		{
 			UI.printErrorMessage("Za mała ilość obiektów w kolekcji zdefiniowanej aby porównać!");
+		}
+	}
+
+	static void personSort(AbstractCollection<Person_defined> listD)
+	{
+		try {
+			switch (UI.enterInt(SORT_MENU + "==>> ")) {
+				case 1:
+					// Comparable
+					if(tabletype < 3) {
+						UI.printInfoMessage("Nie można sortować HashSet/TreeSet");
+					} else if (tabletype == 3){
+						var n_listD = new LinkedList<Person_defined>();
+						for (Person_defined person_d : listD){
+							n_listD.add(person_d);
+						}
+						UI.printMessage("Lista przed sortowaniem: " + n_listD + "\n");
+						Collections.sort(n_listD);
+						UI.printMessage("Posortowana lista: " + n_listD);
+					} else if (tabletype == 4){
+						var n_listD = new ArrayList<Person_defined>();
+						for (Person_defined person_d : listD){
+							n_listD.add(person_d);
+						}
+						UI.printMessage("Lista przed sortowaniem: " + n_listD + "\n");
+						Collections.sort(n_listD);
+						UI.printMessage("Posortowana lista: " + n_listD);
+					}
+					break;
+				case 2:
+					// Comparator
+					if(tabletype < 3) {
+						UI.printInfoMessage("Nie można sortować HashSet/TreeSet");
+					} else if (tabletype == 3){
+						var n_listD = new LinkedList<Person_defined>();
+						for (Person_defined person_d : listD){
+							n_listD.add(person_d);
+						}
+						UI.printMessage("Lista przed sortowaniem: " + n_listD + "\n");
+						Person_definedYearCompare yearCompare = new Person_definedYearCompare();
+						Collections.sort(n_listD, yearCompare);
+						UI.printMessage("Lista posortowana wg roku urodzenia: " + n_listD + "\n");
+						Person_definedLastNameCompare lastNameCompare = new Person_definedLastNameCompare();
+						Collections.sort(n_listD, lastNameCompare);
+						UI.printMessage("Lista posortowana wg nazwiska: " + n_listD + "\n");
+					} else if (tabletype == 4){
+						var n_listD = new ArrayList<Person_defined>();
+						for (Person_defined person_d : listD){
+							n_listD.add(person_d);
+						}
+						UI.printMessage("Lista przed sortowaniem: " + n_listD + "\n");
+						Person_definedYearCompare yearCompare = new Person_definedYearCompare();
+						Collections.sort(n_listD, yearCompare);
+						UI.printMessage("Lista posortowana wg roku urodzenia: " + n_listD + "\n");
+						Person_definedLastNameCompare lastNameCompare = new Person_definedLastNameCompare();
+						Collections.sort(n_listD, lastNameCompare);
+						UI.printMessage("Lista posortowana wg nazwiska: " + n_listD + "\n");
+					}
+					break;
+				case 0: return;
+			}  // koniec instrukcji switch
+		} catch (Exception e) {
+			// Tu są wychwytywane wyjątki zgłaszane przez metody klasy Person,
+			// gdy nie są spełnione ograniczenia nałożone na dopuszczalne wartości
+			// poszczególnych atrybutów.
+			// Drukowanie komunikatu o błędzie zgłoszonym za pomocą wyjątku PersonException.
+			UI.printErrorMessage(e.getMessage());
 		}
 	}
 

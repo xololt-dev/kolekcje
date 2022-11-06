@@ -3,10 +3,11 @@ package tb.soft;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.AbstractCollection;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Iterator;
 
-public class Person_defined extends Person {
+public class Person_defined extends Person implements Comparable<Person_defined>{
     public Person_defined(String first_name, String last_name) throws PersonException {
         super(first_name, last_name);
     }
@@ -15,6 +16,17 @@ public class Person_defined extends Person {
         super(person.firstName, person.lastName);
         this.birthYear = person.birthYear;
         this.job = person.job;
+    }
+
+    @Override
+    public int compareTo(Person_defined o) {
+        return this.birthYear - o.birthYear;
+    }
+
+    @Override
+    public int getBirthYear()
+    {
+        return this.birthYear;
     }
 
     @Override
@@ -54,5 +66,20 @@ public class Person_defined extends Person {
             writer.println(temporaryPerson.firstName + "#" + temporaryPerson.lastName +
                     "#" + temporaryPerson.birthYear + "#" + temporaryPerson.job);
         }
+    }
+}
+
+class Person_definedYearCompare implements Comparator<Person_defined> {
+    public int compare(Person_defined object1, Person_defined object2) {
+        if (object1.getBirthYear() < object2.getBirthYear()) return -1;
+        if (object1.getBirthYear() > object2.getBirthYear()) return 1;
+        else return 0;
+    }
+}
+
+class Person_definedLastNameCompare implements Comparator<Person_defined>{
+    public int compare(Person_defined object1, Person_defined object2)
+    {
+        return object1.getLastName().compareTo(object2.getLastName());
     }
 }
